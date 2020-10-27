@@ -20,16 +20,17 @@
 **      ela será comparada na próxima vez que o script for executado.
 **      Se a próxima execução do script (após 1 hora) a campanha ainda apresentar o erro,
 **      então são pausadas as campanhas e enviado o email de alerta.
+**      Exibi qual o código do erro ou qual erro ocorreu.
 **
 **  Pode ser que o Google, ao tentar acessar alguma URL, encontre algum problema interno mesmo
 **  que ela esteja funcionando normalmente. Para evitar que o script insista no erro, basta
 **  adicionar as URLs na planilha: 
 **  
 **- White list:
-**  https://docs.google.com/spreadsheets/d/1AlXhy0EnzY2ON8JJg171q61ux4b7gI3JrlX_DBwkykk/
+**  https://docs.google.com/spreadsheets/d/1damznLqTjgGzD2Fn_Ztbt7ywi-8PW__J92gp3FnOimE/
 **
 **- Error list:
-**  https://docs.google.com/spreadsheets/d/1gQjM6kx2z1YyU3mHAVUJwC87gZY7PZHp9wNt1vgj7GA/
+**  https://docs.google.com/spreadsheets/d/197bmxCiNgYbKCfoiXwcbna4UNil2H14Dl8FxBeS4kic/
 **
 **  
 **  Precisa apagar a url da Planilha de Erros depois que for ajustado
@@ -52,10 +53,10 @@ NOTIF_EMAIL = "felipe@sweetleads.com.br"
 EMAIL_SUBJECT = "Algumas URLs de anúncio apresentaram problemas!"
 
 //ID da planilha do google
-WHITELIST_SS_ID = "1AlXhy0EnzY2ON8JJg171q61ux4b7gI3JrlX_DBwkykk"
+WHITELIST_SS_ID = "1damznLqTjgGzD2Fn_Ztbt7ywi-8PW__J92gp3FnOimE"
 
 
-ERRORSLIST_SS_ID = "1gQjM6kx2z1YyU3mHAVUJwC87gZY7PZHp9wNt1vgj7GA"
+ERRORSLIST_SS_ID = "197bmxCiNgYbKCfoiXwcbna4UNil2H14Dl8FxBeS4kic"
 
 //Função principal
 function main() {
@@ -252,15 +253,19 @@ function saveSpreadSheets(obj){
     var ss = SpreadsheetApp.openById(ERRORSLIST_SS_ID);//open google sheets by ID (URL)
     var sheet = ss.getActiveSheet(); // select sheet actived
 
+    Logger.log(obj.finalUrl);
+    Logger.log(" ###########");
+    Logger.log(obj.trackingTemplate);
+
     var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
 
     if (!notNil(obj.code)) {  
-      if ((notIn(errorsList,obj.finalUrl))||(notIn(errorsList,obj.trackingTemplate))) {
-        
-        sheet.appendRow([obj.finalUrl,obj.trackingTemplate]);
+      if ((notIn(errorsList, obj.finalUrl)) ||(notIn( errorsList, obj.trackingTemplate ))) {
+
+        sheet.appendRow([ obj.finalUrl, obj.trackingTemplate ]);
         obj.pop();
         return obj;
-        
+
       }
     }
     return obj

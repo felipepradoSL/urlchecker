@@ -26,10 +26,10 @@
 **  adicionar as URLs na planilha: 
 **  
 **- White list:
-**  https://docs.google.com/spreadsheets/d/1AlXhy0EnzY2ON8JJg171q61ux4b7gI3JrlX_DBwkykk/
+**  https://docs.google.com/spreadsheets/d/1RECx7nxDsX_81D7yiLRr1rIrpyWnfzDmyx283w5S2jI/
 **
 **- Error list:
-**  https://docs.google.com/spreadsheets/d/1gQjM6kx2z1YyU3mHAVUJwC87gZY7PZHp9wNt1vgj7GA/
+**  https://docs.google.com/spreadsheets/d/1BSmNkv_G0z_TwV9pp-IU6uTrr9bxemZAcdX1DDa6_z0/
 **
 **  
 **  Precisa apagar a url da Planilha de Erros depois que for ajustado
@@ -52,10 +52,10 @@ NOTIF_EMAIL = "felipe@sweetleads.com.br"
 EMAIL_SUBJECT = "Algumas URLs de anúncio apresentaram problemas!"
 
 //ID da planilha do google
-WHITELIST_SS_ID = "1AlXhy0EnzY2ON8JJg171q61ux4b7gI3JrlX_DBwkykk"
+WHITELIST_SS_ID = "1RECx7nxDsX_81D7yiLRr1rIrpyWnfzDmyx283w5S2jI"
 
 
-ERRORSLIST_SS_ID = "1gQjM6kx2z1YyU3mHAVUJwC87gZY7PZHp9wNt1vgj7GA"
+ERRORSLIST_SS_ID = "1BSmNkv_G0z_TwV9pp-IU6uTrr9bxemZAcdX1DDa6_z0"
 
 //Função principal
 function main() {
@@ -252,15 +252,19 @@ function saveSpreadSheets(obj){
     var ss = SpreadsheetApp.openById(ERRORSLIST_SS_ID);//open google sheets by ID (URL)
     var sheet = ss.getActiveSheet(); // select sheet actived
 
+    Logger.log(obj.finalUrl);
+    Logger.log(" ###########");
+    Logger.log(obj.trackingTemplate);
+
     var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
 
     if (!notNil(obj.code)) {  
-      if ((notIn(errorsList,obj.finalUrl))||(notIn(errorsList,obj.trackingTemplate))) {
-        
-        sheet.appendRow([obj.finalUrl,obj.trackingTemplate]);
+      if ((notIn(errorsList, obj.finalUrl)) ||(notIn( errorsList, obj.trackingTemplate ))) {
+
+        sheet.appendRow([ obj.finalUrl, obj.trackingTemplate ]);
         obj.pop();
         return obj;
-        
+
       }
     }
     return obj

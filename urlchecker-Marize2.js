@@ -26,24 +26,23 @@
 **  adicionar as URLs na planilha: 
 **  
 **- White list:
-**  https://docs.google.com/spreadsheets/d/1AlXhy0EnzY2ON8JJg171q61ux4b7gI3JrlX_DBwkykk/
+**  https://docs.google.com/spreadsheets/d/1XpdWUYN5bcMj-WP2yExQkyYs_Kd88E12ycDilWL0CBo/
 **
 **- Error list:
-**  https://docs.google.com/spreadsheets/d/1gQjM6kx2z1YyU3mHAVUJwC87gZY7PZHp9wNt1vgj7GA/
+**  https://docs.google.com/spreadsheets/d/1jajBR8QBYRh0CoOEzpXmB3W2FPHHdTghs3U0-BYl-HA/
 **
-**  
+**  v2.0
 **  Precisa apagar a url da Planilha de Erros depois que for ajustado
 **    -> Inserir script que apaga a planilha e executa-lo a cada 24h
 **
 *****************************************************************************/
 
-
 //array com condições dos anuncios
 ADS_CONDITIONS =
-["CampaignStatus = ENABLED"
-,"AdGroupStatus = ENABLED"
-,"Status = ENABLED"
-];
+  ["CampaignStatus = ENABLED"
+  ,"AdGroupStatus = ENABLED"
+  ,"Status = ENABLED"
+  ];
 
 //e-mail destinatário
 NOTIF_EMAIL = "felipe@sweetleads.com.br"
@@ -52,10 +51,10 @@ NOTIF_EMAIL = "felipe@sweetleads.com.br"
 EMAIL_SUBJECT = "Algumas URLs de anúncio apresentaram problemas!"
 
 //ID da planilha do google
-WHITELIST_SS_ID = "1AlXhy0EnzY2ON8JJg171q61ux4b7gI3JrlX_DBwkykk"
+WHITELIST_SS_ID = "1XpdWUYN5bcMj-WP2yExQkyYs_Kd88E12ycDilWL0CBo"
 
 
-ERRORSLIST_SS_ID = "1gQjM6kx2z1YyU3mHAVUJwC87gZY7PZHp9wNt1vgj7GA"
+ERRORSLIST_SS_ID = "1jajBR8QBYRh0CoOEzpXmB3W2FPHHdTghs3U0-BYl-HA"
 
 //Função principal
 function main() {
@@ -68,10 +67,10 @@ function main() {
     .filter(hasErrors)//filtra pelos erros retornados do array quais têm erro
     .map(saveSpreadSheets)
     //.map(pauseCampaign);//pausa a campanha
-
-    Logger.log("*************results****************");
-    Logger.log(JSON.stringify(results))
-    Logger.log("*************results****************");
+  
+  Logger.log("*************results****************");
+  Logger.log(JSON.stringify(results))
+  Logger.log("*************results****************");
 
   var shouldNotify = notNil(results) ? true : false; //verifica se retornou anuncios com erros
   
@@ -84,20 +83,20 @@ function main() {
 //retornar a whitelist da planilha de acordo com o ID passado
 function getWhiteList(ssId){
   return SpreadsheetApp
-  .openById(ssId)
-  .getDataRange()
-  .getValues()
-  .reduce(function(acc,row){ return acc.concat(row)})
-  .filter(function(x){ return x.length > 0 })
+    .openById(ssId)
+    .getDataRange()
+    .getValues()
+    .reduce(function(acc,row){ return acc.concat(row)})
+    .filter(function(x){ return x.length > 0 })
 }
 
 function getErrorsReports(ssId){
   return SpreadsheetApp
-  .openById(ssId)
-  .getDataRange()
-  .getValues()
-  .reduce(function(acc,row){ return acc.concat(row)})
-  .filter(function(x){ return x.length > 0 })
+    .openById(ssId)
+    .getDataRange()
+    .getValues()
+    .reduce(function(acc,row){ return acc.concat(row)})
+    .filter(function(x){ return x.length > 0 })
 }
 
 
@@ -108,18 +107,18 @@ function notIn(list, el){
 
 //pega os anuncios com erros
 function getAds(conds,whitelist) {
-
+  
   var ads = [];//array que armazenará os anuncios com erros
   
   var rawAdsIt = AdsApp.ads(); //novo objeto raiz da API google Ads
   
   var adsIt = conds
-  .reduce(function(acc,cond){ return acc.withCondition(cond) }, rawAdsIt)
+    .reduce(function(acc,cond){ return acc.withCondition(cond) }, rawAdsIt)
     .get(); //retorna todos os anuncios com as condições passadas como parametro
-
-
+  
+  
   while(adsIt.hasNext()) { //enquando existir anuncio ativo
-
+   
     var current = adsIt.next();//anuncio atual
     var campaign = current.getCampaign();//obtem a campanha
     var urls = current.urls();//obtem url atual
@@ -132,8 +131,8 @@ function getAds(conds,whitelist) {
     if(notIn(whitelist, finalUrl)){//verifica se a url final não está na whitelist
       adData['finalUrl'] = finalUrl  //atribui a url no objeto 
     }
-
-
+  
+  
     if(notIn(whitelist, trackingTemplate)){//verifica se a modelo de acompanhamento está na whitelist
       adData['trackingTemplate'] = trackingTemplate    //atribui a url no objeto
     }
@@ -175,40 +174,41 @@ function checkUrls(obj) {
   };
 
   //
-
   
   if(obj.finalUrl){//veririca se existe url final
-
+    
     try{
       var finalUrlResponse = UrlFetchApp.fetch(obj.finalUrl, defaultParams);
       var finalUrlResponseCode = finalUrlResponse.getResponseCode();//testa a url final e retorna o código de resposta
-
+  
       if(isClientError(finalUrlResponseCode)){//verifica se o código de respostá é o 403 ou 404
-        obj.errors.push("URL final não encontrada, erro " + finalUrlResponseCode);//caso true, insere o erro no array        
+        obj.errors.push("URL final não encontrada, erro " + finalUrlResponseCode);//caso true, insere o erro no array       
       }
     }catch(e){//excessão de nao retornar nada
-      obj.errors.push("A URL final não pôde ser acessada (pode estar temporariamente indisponível/Servidor fora do ar)."+"\n\n" +" Código de resposta: " + finalUrlResponseCode + " Erro:" + e); 
+      obj.errors.push("A URL final não pôde ser acessada (pode estar temporariamente indisponível/Servidor fora do ar). Código de respsota: " + finalUrlResponseCode) 
+      obj.code.push(finalUrlResponseCode)
     }
     
-
+      
   }
   
   if(obj.trackingTemplate){//verifica se existe modelo de acompanhamento
-
+    
     try{
       var trackingTemplateResponse = UrlFetchApp.fetch(obj.trackingTemplate, defaultParams);
       var trackingTemplateResponseCode = trackingTemplateResponse.getResponseCode();//testa o modelo de acompanhamento e retorna o código de resposta
-
+  
       if(isClientError(trackingTemplateResponseCode)){//verifica se o código de respostá é o 403 ou 404
        obj.errors.push("URL do modelo de acompanhamento não encontrado, erro " + trackingTemplateResponseCode);//caso true, insere o erro no array       
-     }
+      }
     }catch(e){//excessão de nao retornar nada
-     obj.errors.push("A URL final não pôde ser acessada (pode estar temporariamente indisponível/Servidor fora do ar)."+"\n\n" +" Código de resposta: " + trackingTemplate + " Erro:" + e); 
-   }    
+      obj.errors.push("O modelo de acompanhamento não pôde ser acessado (pode estar temporariamente indisponível/Servidor fora do ar). Código de respsota: " + trackingTemplateResponseCode)
+      obj.code.push(trackingTemplateResponseCode)
+    }    
+    
+  }  
    
- }  
-
- return obj;  
+  return obj;  
 }
 
 //funcão que pausa a campanha e aguarda 2000 milisegundos(delay)
@@ -218,12 +218,12 @@ function pauseCampaign(obj){
   
   return obj;
 }
-
+  
 //função que verifica se existe algum erro no objeto (no atributo 'erros') 
 function hasErrors(obj){
   return notNil(obj.errors);
 }
-
+  
  //função que monta o corpo do email 
  function composeEmail(results){
   var currentAccount = AdsApp.currentAccount();
@@ -245,23 +245,26 @@ function hasErrors(obj){
   return body + "" + footer;
 }
 
-
 //Salva a planilha
 function saveSpreadSheets(obj){
-
-    var ss = SpreadsheetApp.openById(ERRORSLIST_SS_ID);//open google sheets by ID (URL)
-    var sheet = ss.getActiveSheet(); // select sheet actived
-
-    var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
+    
+  var ss = SpreadsheetApp.openById(ERRORSLIST_SS_ID);//open google sheets by ID (URL)
+  var sheet = ss.getActiveSheet(); // select sheet actived
+  var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
+  var campaignName = obj.campaign.getName();
 
     if (!notNil(obj.code)) {  
-      if ((notIn(errorsList,obj.finalUrl))||(notIn(errorsList,obj.trackingTemplate))) {
-        
-        sheet.appendRow([obj.finalUrl,obj.trackingTemplate]);
+      if (notIn(errorsList,obj.finalUrl)) {
+        sheet.appendRow([obj.finalUrl,campaignName]);
         obj.pop();
         return obj;
-        
+      }
+      else if(notIn(errorsList,obj.trackingTemplate)) {
+        sheet.appendRow([obj.trackingTemplate,campaignName]);
+        obj.pop();
+        return obj;
       }
     }
+
     return obj
-  }
+}
