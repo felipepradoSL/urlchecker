@@ -28,14 +28,11 @@
 **  adicionar as URLs na planilha: 
 **  
 **- White list:
-**  https://docs.google.com/spreadsheets/d/1XpdWUYN5bcMj-WP2yExQkyYs_Kd88E12ycDilWL0CBo/
+**  https://docs.google.com/spreadsheets/d/1lKfPPJFPMycmHUENfEweT4jxPnZ-iRfD79BdmSGN-Gs/
 **
 **- Error list:
-**  https://docs.google.com/spreadsheets/d/1jajBR8QBYRh0CoOEzpXmB3W2FPHHdTghs3U0-BYl-HA/
+**  https://docs.google.com/spreadsheets/d/132DJ6Xs4xvRwkwltGtxn8kNYfzNi0jtasSyVcSw6ppQ/
 **
-**  v2.0
-**  Precisa apagar a url da Planilha de Erros depois que for ajustado
-**    -> Inserir script que apaga a planilha e executa-lo a cada 24h
 **
 *****************************************************************************/
 
@@ -47,16 +44,16 @@ ADS_CONDITIONS =
   ];
 
 //e-mail destinatário
-NOTIF_EMAIL = "felipe@sweetleads.com.br"
+NOTIF_EMAIL = "afiliados@sweetleads.com.br"
 
 //assunto email
 EMAIL_SUBJECT = "Algumas URLs de anúncio apresentaram problemas!"
 
 //ID da planilha do google
-WHITELIST_SS_ID = "1XpdWUYN5bcMj-WP2yExQkyYs_Kd88E12ycDilWL0CBo"
+WHITELIST_SS_ID = "1lKfPPJFPMycmHUENfEweT4jxPnZ-iRfD79BdmSGN-Gs"
 
 
-ERRORSLIST_SS_ID = "1jajBR8QBYRh0CoOEzpXmB3W2FPHHdTghs3U0-BYl-HA"
+ERRORSLIST_SS_ID = "132DJ6Xs4xvRwkwltGtxn8kNYfzNi0jtasSyVcSw6ppQ"
 
 //Função principal
 function main() {
