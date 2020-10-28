@@ -20,8 +20,9 @@
 **      ela será comparada na próxima vez que o script for executado.
 **      Se a próxima execução do script (após 1 hora) a campanha ainda apresentar o erro,
 **      então são removidas da planilha e as campanhas são pausadas e enviado o email de alerta.
-**      Caso não haja erro 404 ou 403, a campanha é pausada e o email de alerta é enviado.
-**      Exibi qual o código do erro ou qual erro ocorreu.
+**      Caso não haja erro 404 ou 403 e ocorra algum outro erro, a campanha é pausada e o email de alerta é enviado
+**      exibindo qual o código do erro ou qual erro ocorreu.
+**      Caso após 1hora a campanha não esteja apresentando erro novamente, ela será limpa da planilha de erros.
 **
 **  Pode ser que o Google, ao tentar acessar alguma URL, encontre algum problema interno mesmo
 **  que ela esteja funcionando normalmente. Para evitar que o script insista no erro, basta
@@ -34,8 +35,6 @@
 **  https://docs.google.com/spreadsheets/d/1jajBR8QBYRh0CoOEzpXmB3W2FPHHdTghs3U0-BYl-HA/
 **
 **  v2.0
-**  Precisa apagar a url da Planilha de Erros depois que for ajustado
-**    -> Inserir script que apaga a planilha e executa-lo a cada 24h
 **
 *****************************************************************************/
 
@@ -68,11 +67,15 @@ function main() {
     .map(checkUrls)//verificas as urls
     .filter(hasErrors);//filtra pelos erros retornados do array quais têm erro
 
-  var verify = results.filter(verifySheet)
-    .map(saveSpreadSheets);
+  var checking = results.filter(hasCode)    //função que filtra as campanhas que estão apresentando erros e serão enviadas por email                                             
+    .map(pauseCampaign);                    //caso campanha apresentou erro novamente, será removida da planilha e pausada  
+                                            //pausa a campanha
 
-  var checking = results.filter(hasCode)      
-    .map(pauseCampaign);//pausa a campanha
+  prepareSpreadSheet(); // Limpa a planilha para inserir os novos erros
+                        // Os erros anteriores que ainda estão na planilha serão apagados, pois não apresentaram erro novamente após 1 hora
+    
+  var verify = results.filter(verifySheet) //campanhas que retornaram 404 403 e serão gravadas na planilha
+    .map(saveSpreadSheets);  
 
     Logger.log("*************gravadas****************");
     Logger.log(JSON.stringify(verify))
@@ -245,7 +248,8 @@ function verifySheet(obj){
     return list.indexOf(el) > -1;
  }
 
-  //função que veririca se retornou algum erro diferente de 404 ou 403 no objeto
+  //função que filtra as campanhas que estão apresentando erros e serão enviadas por email
+  //caso campanha apresentou erro novamente, será removida da planilha e pausada
   function hasCode(obj){
     Logger.log("filtrando...")
 
@@ -285,7 +289,7 @@ function verifySheet(obj){
     var campaignName = obj.campaign.getName();
     var errors = obj.errors.reduce(function(res,err){ return res + "\n" + err}, "")
     
-    return "********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + "\n";
+    return acc +="********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + "\n";
     
   }, firstLine);  
   
@@ -309,3 +313,11 @@ function saveSpreadSheets(obj){
 
     return obj
   }
+
+//Limpa e prepara a planilha
+function prepareSpreadSheet(){
+  var ss = SpreadsheetApp.openById(ERRORSLIST_SS_ID);
+  var sheet = ss.getActiveSheet();
+
+  sheet.clear();
+}
