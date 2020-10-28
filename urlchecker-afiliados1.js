@@ -261,7 +261,7 @@ function hasErrors(obj){
     var campaignName = obj.campaign.getName();
     var errors = obj.errors.reduce(function(res,err){ return res + "\n" + err}, "")
     
-    return "********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + "\n";
+    return acc +="********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + "\n";
     
   }, firstLine);  
   

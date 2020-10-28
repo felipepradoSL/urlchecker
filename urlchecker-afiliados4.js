@@ -195,7 +195,6 @@ function checkUrls(obj) {
       obj.errors.push("O modelo de acompanhamento não pôde ser acessado (pode estar temporariamente indisponível/Servidor fora do ar). Código de respsota: " + trackingTemplateResponseCode)
       obj.code.push("Erro: " + e);
     }    
-    
   }  
    
   return obj;  
@@ -260,7 +259,7 @@ function hasErrors(obj){
     var campaignName = obj.campaign.getName();
     var errors = obj.errors.reduce(function(res,err){ return res + "\n" + err}, "")
     
-    return "********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + "\n";
+    return acc +="********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + "\n";
     
   }, firstLine);  
   
