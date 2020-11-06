@@ -22,6 +22,7 @@
 **      então são removidas da planilha e as campanhas são pausadas e enviado o email de alerta.
 **      Caso não haja erro 404 ou 403, a campanha é pausada e o email de alerta é enviado.
 **      Exibi qual o código do erro ou qual erro ocorreu.
+**      Caso após 1hora a campanha não esteja apresentando erro novamente, ela será limpa da planilha de erros.
 **
 **  Pode ser que o Google, ao tentar acessar alguma URL, encontre algum problema interno mesmo
 **  que ela esteja funcionando normalmente. Para evitar que o script insista no erro, basta
@@ -187,7 +188,7 @@ function checkUrls(obj) {
       var finalUrlResponseCode = finalUrlResponse.getResponseCode();//testa a url final e retorna o código de resposta
   
       if(isClientError(finalUrlResponseCode)){//verifica se o código de respostá é o 403 ou 404
-        obj.errors.push("URL final não encontrada, erro " + finalUrlResponseCode);//caso true, insere o erro no array       
+        obj.errors.push("URL final não encontrada novamente na segunda verifação, erro " + finalUrlResponseCode);//caso true, insere o erro no array       
       }
     }catch(e){//excessão de nao retornar nada
       obj.errors.push("A URL final não pôde ser acessada (pode estar temporariamente indisponível/Servidor fora do ar). Código de respsota: " + finalUrlResponseCode) 
@@ -203,7 +204,7 @@ function checkUrls(obj) {
       var trackingTemplateResponseCode = trackingTemplateResponse.getResponseCode();//testa o modelo de acompanhamento e retorna o código de resposta
   
       if(isClientError(trackingTemplateResponseCode)){//verifica se o código de respostá é o 403 ou 404
-       obj.errors.push("URL do modelo de acompanhamento não encontrado, erro " + trackingTemplateResponseCode);//caso true, insere o erro no array       
+       obj.errors.push("URL do modelo de acompanhamento não encontrado novamente na segunda verifação, erro " + trackingTemplateResponseCode);//caso true, insere o erro no array       
       }
     }catch(e){//excessão de nao retornar nada
       obj.errors.push("O modelo de acompanhamento não pôde ser acessado (pode estar temporariamente indisponível/Servidor fora do ar). Código de resposta: " + trackingTemplateResponseCode)
@@ -233,7 +234,7 @@ function verifySheet(obj){
     var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
 
       if(obj.finalUrl){
-        if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
+        if ((obj.code  != null)&&(notIn(errorsList,obj.finalUrl))){
           return false;
         }
         else if (inSheet(errorsList, obj.finalUrl)){
@@ -246,7 +247,7 @@ function verifySheet(obj){
       }
 
       if(obj.trackingTemplate){
-        if ((obj.code)&&(notIn(errorsList,obj.trackingTemplate))){
+        if ((obj.code != null)&&(notIn(errorsList,obj.trackingTemplate))){
           return false;
         }
         else if (inSheet(errorsList, obj.trackingTemplate)){
@@ -274,7 +275,7 @@ function verifySheet(obj){
     var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
 
     if(obj.finalUrl){
-      if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
+      if ((obj.code  != null )&&(notIn(errorsList,obj.finalUrl))){
         Logger.log(" - Apresentou erro diferente");
         return true;
       }
@@ -290,7 +291,7 @@ function verifySheet(obj){
     }
 
     if(obj.trackingTemplate){
-      if ((obj.code)&&(notIn(errorsList,obj.trackingTemplate))){
+      if ((obj.code  != null)&&(notIn(errorsList,obj.trackingTemplate))){
         Logger.log(" - Apresentou erro diferente");
         return true;
       }
@@ -322,17 +323,17 @@ function verifySheet(obj){
   var accountName = currentAccount.getName();
   var accountId = currentAccount.getCustomerId();
 
-  var firstLine = "Conta: " + accountName + " - " + accountId + " \n " + " \n " + " As URLs das seguintes campanhas não estão respondendo e foram pausadas: " + " \n ";
+  var firstLine = "Conta: " + accountName + " - " + accountId + " \n " + " \n " + " As URLs das seguintes campanhas não estão respondendo e foram pausadas: " + " \n " + " \n ";
   
   var body = results.reduce(function(acc,obj){
     var campaignName = obj.campaign.getName();
     var errors = obj.errors.reduce(function(res,err){ return res + "\n" + err}, "")
     
-    return acc +="********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + "\n";
+    return acc +="********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + " \n " + " \n ";
     
   }, firstLine);  
   
-  var footer = "\n\nCaso alguma URL esteja funcionando normalmente, basta adicioná-la em https://docs.google.com/spreadsheets/d/" + WHITELIST_SS_ID + "/ para incluir na whitelist.";
+  var footer = "\n\n --- \n Caso alguma URL esteja funcionando normalmente, basta adicioná-la em https://docs.google.com/spreadsheets/d/" + WHITELIST_SS_ID + "/ para incluir na whitelist.";
 
   return body + "" + footer;
 }
