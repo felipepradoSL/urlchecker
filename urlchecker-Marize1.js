@@ -70,11 +70,13 @@ function main() {
     .map(pauseCampaign);                    //caso campanha apresentou erro novamente, será removida da planilha e pausada  
                                             //pausa a campanha
 
-  prepareSpreadSheet(); // Limpa a planilha para inserir os novos erros
-                        // Os erros anteriores que ainda estão na planilha serão apagados, pois não apresentaram erro novamente após 1 hora
     
   var verify = results.filter(verifySheet) //campanhas que retornaram 404 403 e serão gravadas na planilha
-    .map(saveSpreadSheets);  
+
+  prepareSpreadSheet(); // Limpa a planilha para inserir os novos erros
+  // Os erros anteriores que ainda estão na planilha serão apagados, pois não apresentaram erro novamente após 1 hora
+    
+  verify.map(saveSpreadSheets);  
 
     Logger.log("*************gravadas****************");
     Logger.log(JSON.stringify(verify))
@@ -203,7 +205,7 @@ function checkUrls(obj) {
        obj.errors.push("URL do modelo de acompanhamento não encontrado, erro " + trackingTemplateResponseCode);//caso true, insere o erro no array       
       }
     }catch(e){//excessão de nao retornar nada
-      obj.errors.push("O modelo de acompanhamento não pôde ser acessado (pode estar temporariamente indisponível/Servidor fora do ar). Código de respsota: " + trackingTemplateResponseCode)
+      obj.errors.push("O modelo de acompanhamento não pôde ser acessado (pode estar temporariamente indisponível/Servidor fora do ar). Código de resposta: " + trackingTemplateResponseCode)
       obj.code.push("Erro: " + e);
     }    
     
@@ -229,15 +231,31 @@ function hasErrors(obj){
 function verifySheet(obj){
     var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
 
-    if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
-        return false;
+      if(obj.finalUrl){
+        if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
+          return false;
+        }
+        else if (inSheet(errorsList, obj.finalUrl)){
+          return false;
+         }
+        else
+        {      
+          return true;
+        }
       }
-      else if (inSheet(errorsList, obj.finalUrl)){
-        return false;
-       }
-      else
-      {      
-        return true;
+
+      if(obj.trackingTemplate){
+        if ((obj.code)&&(notIn(errorsList,obj.trackingTemplate))){
+          return false;
+        }
+        else if (inSheet(errorsList, obj.trackingTemplate)){
+          return false;
+         }
+        else
+        {      
+          return true;
+        }
+        
       }
 
 }
@@ -250,22 +268,43 @@ function verifySheet(obj){
   //função que filtra as campanhas que estão apresentando erros e serão enviadas por email
   //caso campanha apresentou erro novamente, será removida da planilha e pausada
   function hasCode(obj){
-    Logger.log("filtrando...")
+    Logger.log("filtrando campanhas que serao pausadas...")
 
     var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
 
-    if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
-      return true;
+    if(obj.finalUrl){
+      if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
+        Logger.log(" - Apresentou erro diferente");
+        return true;
+      }
+      else if (inSheet(errorsList, obj.finalUrl)){      
+        Logger.log(" - Apresentou erro novamente " + obj.finalUrl);
+        deleteRowSpreadSheet(errorsList.indexOf(obj.finalUrl));
+        return true;
+       }
+      else
+      {
+        return false;
+      }
     }
-    else if (inSheet(errorsList, obj.finalUrl)){
-      Logger.log(obj.finalUrl);
-      deleteRowSpreadSheet(errorsList.indexOf(obj.finalUrl));
-      return true;
-     }
-    else
-    {
-      return false;
+
+    if(obj.trackingTemplate){
+      if ((obj.code)&&(notIn(errorsList,obj.trackingTemplate))){
+        Logger.log(" - Apresentou erro diferente");
+        return true;
+      }
+      else if (inSheet(errorsList, obj.trackingTemplate)){      
+        Logger.log(" - Apresentou erro novamente " + obj.trackingTemplate);
+        deleteRowSpreadSheet(errorsList.indexOf(obj.trackingTemplate));
+        return true;
+       }
+      else
+      {
+        return false;
+      }
     }
+
+
   }
 
   function deleteRowSpreadSheet(el){
@@ -308,7 +347,14 @@ function saveSpreadSheets(obj){
     Logger.log(" ###########");
     Logger.log(obj.campaign.getName());
 
-    sheet.appendRow([ obj.finalUrl, obj.campaign.getName() ]);
+    if(obj.finalUrl){      
+      sheet.appendRow([ obj.finalUrl, obj.campaign.getName() ]);
+    }
+
+    if(obj.trackingTemplate){      
+      sheet.appendRow([ obj.trackingTemplateResponse, obj.campaign.getName() ]);
+    }
+
 
     return obj
   }

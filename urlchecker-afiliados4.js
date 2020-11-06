@@ -20,8 +20,9 @@
 **      ela será comparada na próxima vez que o script for executado.
 **      Se a próxima execução do script (após 1 hora) a campanha ainda apresentar o erro,
 **      então são removidas da planilha e as campanhas são pausadas e enviado o email de alerta.
-**      Caso não haja erro 404 ou 403, a campanha é pausada e o email de alerta é enviado.
-**      Exibi qual o código do erro ou qual erro ocorreu.
+**      Caso não haja erro 404 ou 403 e ocorra algum outro erro, a campanha é pausada e o email de alerta é enviado
+**      exibindo qual o código do erro ou qual erro ocorreu.
+**      Caso após 1hora a campanha não esteja apresentando erro novamente, ela será limpa da planilha de erros.
 **
 **  Pode ser que o Google, ao tentar acessar alguma URL, encontre algum problema interno mesmo
 **  que ela esteja funcionando normalmente. Para evitar que o script insista no erro, basta
@@ -66,12 +67,25 @@ function main() {
     .map(checkUrls)//verificas as urls
     .filter(hasErrors);//filtra pelos erros retornados do array quais têm erro
 
-  var checking = results.filter(hasCode)      
-    .map(pauseCampaign);//pausa a campanha
+  var checking = results.filter(hasCode)    //função que filtra as campanhas que estão apresentando erros e serão enviadas por email                                             
+    .map(pauseCampaign);                    //caso campanha apresentou erro novamente, será removida da planilha e pausada  
+                                            //pausa a campanha
 
-    Logger.log("*************results****************");
+    
+  var verify = results.filter(verifySheet) //campanhas que retornaram 404 403 e serão gravadas na planilha
+
+  prepareSpreadSheet(); // Limpa a planilha para inserir os novos erros
+  // Os erros anteriores que ainda estão na planilha serão apagados, pois não apresentaram erro novamente após 1 hora
+    
+  verify.map(saveSpreadSheets);  
+
+    Logger.log("*************gravadas****************");
+    Logger.log(JSON.stringify(verify))
+    Logger.log("*************gravadas****************");
+
+    Logger.log("*************pausadas****************");
     Logger.log(JSON.stringify(checking))
-    Logger.log("*************results****************");
+    Logger.log("*************pausadas****************");
 
   var shouldNotify = notNil(checking) ? true : false; //verifica se retornou anuncios com erros
   
@@ -192,9 +206,10 @@ function checkUrls(obj) {
        obj.errors.push("URL do modelo de acompanhamento não encontrado, erro " + trackingTemplateResponseCode);//caso true, insere o erro no array       
       }
     }catch(e){//excessão de nao retornar nada
-      obj.errors.push("O modelo de acompanhamento não pôde ser acessado (pode estar temporariamente indisponível/Servidor fora do ar). Código de respsota: " + trackingTemplateResponseCode)
+      obj.errors.push("O modelo de acompanhamento não pôde ser acessado (pode estar temporariamente indisponível/Servidor fora do ar). Código de resposta: " + trackingTemplateResponseCode)
       obj.code.push("Erro: " + e);
     }    
+    
   }  
    
   return obj;  
@@ -213,30 +228,84 @@ function hasErrors(obj){
   return notNil(obj.errors);
 }
 
+//retorna as campanhas que serao gravadas na planilha
+function verifySheet(obj){
+    var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
+
+      if(obj.finalUrl){
+        if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
+          return false;
+        }
+        else if (inSheet(errorsList, obj.finalUrl)){
+          return false;
+         }
+        else
+        {      
+          return true;
+        }
+      }
+
+      if(obj.trackingTemplate){
+        if ((obj.code)&&(notIn(errorsList,obj.trackingTemplate))){
+          return false;
+        }
+        else if (inSheet(errorsList, obj.trackingTemplate)){
+          return false;
+         }
+        else
+        {      
+          return true;
+        }
+        
+      }
+
+}
+
  //verifica se o indice da lista existe
  function inSheet(list, el){
     return list.indexOf(el) > -1;
  }
 
-  //função que veririca se retornou algum erro diferente de 404 ou 403 no objeto
+  //função que filtra as campanhas que estão apresentando erros e serão enviadas por email
+  //caso campanha apresentou erro novamente, será removida da planilha e pausada
   function hasCode(obj){
-    Logger.log("filtrando...")
+    Logger.log("filtrando campanhas que serao pausadas...")
 
     var errorsList = getErrorsReports(ERRORSLIST_SS_ID);
 
-    if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
-      return true;
+    if(obj.finalUrl){
+      if ((obj.code)&&(notIn(errorsList,obj.finalUrl))){
+        Logger.log(" - Apresentou erro diferente");
+        return true;
+      }
+      else if (inSheet(errorsList, obj.finalUrl)){      
+        Logger.log(" - Apresentou erro novamente " + obj.finalUrl);
+        deleteRowSpreadSheet(errorsList.indexOf(obj.finalUrl));
+        return true;
+       }
+      else
+      {
+        return false;
+      }
     }
-    else if (inSheet(errorsList, obj.finalUrl)){
-      Logger.log(obj.finalUrl);
-      deleteRowSpreadSheet(errorsList.indexOf(obj.finalUrl));
-      return true;
-     }
-    else
-    {
-      saveSpreadSheets(obj);
-      return false;
+
+    if(obj.trackingTemplate){
+      if ((obj.code)&&(notIn(errorsList,obj.trackingTemplate))){
+        Logger.log(" - Apresentou erro diferente");
+        return true;
+      }
+      else if (inSheet(errorsList, obj.trackingTemplate)){      
+        Logger.log(" - Apresentou erro novamente " + obj.trackingTemplate);
+        deleteRowSpreadSheet(errorsList.indexOf(obj.trackingTemplate));
+        return true;
+       }
+      else
+      {
+        return false;
+      }
     }
+
+
   }
 
   function deleteRowSpreadSheet(el){
@@ -279,7 +348,22 @@ function saveSpreadSheets(obj){
     Logger.log(" ###########");
     Logger.log(obj.campaign.getName());
 
-    sheet.appendRow([ obj.finalUrl, obj.campaign.getName() ]);
+    if(obj.finalUrl){      
+      sheet.appendRow([ obj.finalUrl, obj.campaign.getName() ]);
+    }
+
+    if(obj.trackingTemplate){      
+      sheet.appendRow([ obj.trackingTemplateResponse, obj.campaign.getName() ]);
+    }
+
 
     return obj
   }
+
+//Limpa e prepara a planilha
+function prepareSpreadSheet(){
+  var ss = SpreadsheetApp.openById(ERRORSLIST_SS_ID);
+  var sheet = ss.getActiveSheet();
+
+  sheet.clear();
+}
