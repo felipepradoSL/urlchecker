@@ -184,10 +184,10 @@ function checkUrls(obj) {
       var finalUrlResponseCode = finalUrlResponse.getResponseCode();//testa a url final e retorna o código de resposta
 
       if (isClientError(finalUrlResponseCode)) {//verifica se o código de respostá é o 403 ou 404
-        obj.errors.push("URL final não encontrada novamente na segunda verificação, erro " + finalUrlResponseCode);//caso true, insere o erro no array       
+        obj.errors.push("URL final " + obj.finalUrl + " não encontrada novamente na segunda verificação, erro " + finalUrlResponseCode);//caso true, insere o erro no array       
       }
     } catch (e) {//excessão de nao retornar nada
-      obj.errors.push("A URL final não pôde ser acessada novamente na segunda verificação (pode estar temporariamente indisponível/Servidor fora do ar). Código de resposta: " + finalUrlResponseCode + " Erro: " + e)
+      obj.errors.push("A URL final " + obj.finalUrl + " não pôde ser acessada novamente na segunda verificação (pode estar temporariamente indisponível/Servidor fora do ar). Código de resposta: " + finalUrlResponseCode + " Erro: " + e)
     }
 
   }
@@ -199,10 +199,10 @@ function checkUrls(obj) {
       var trackingTemplateResponseCode = trackingTemplateResponse.getResponseCode();//testa o modelo de acompanhamento e retorna o código de resposta
 
       if (isClientError(trackingTemplateResponseCode)) {//verifica se o código de respostá é o 403 ou 404
-        obj.errors.push("URL do modelo de acompanhamento não encontrado novamente na segunda verificação, erro " + trackingTemplateResponseCode);//caso true, insere o erro no array       
+        obj.errors.push("URL do modelo de acompanhamento " + obj.trackingTemplate + " não encontrado novamente na segunda verificação, erro " + trackingTemplateResponseCode);//caso true, insere o erro no array       
       }
     } catch (e) {//excessão de nao retornar nada
-      obj.errors.push("O modelo de acompanhamento não pôde ser acessado novamente na segunda verificação (pode estar temporariamente indisponível/Servidor fora do ar). Código de resposta: " + trackingTemplateResponseCode + "Erro: " + e)
+      obj.errors.push("O modelo de acompanhamento " + obj.trackingTemplate + " não pôde ser acessado novamente na segunda verificação (pode estar temporariamente indisponível/Servidor fora do ar). Código de resposta: " + trackingTemplateResponseCode + "Erro: " + e)
     }
 
   }
@@ -306,7 +306,7 @@ function composeEmail(results) {
     var campaignName = obj.campaign.getName();
     var errors = obj.errors.reduce(function (res, err) { return res + "\n" + err }, "")
 
-    return acc += "********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada " + errors + " \n " + " \n ";
+    return acc += "********************\n" + "Campanha: " + campaignName + "\n" + "\n" + "Motivos: URL Final ou URL do modelo de acompanhamento não encontrada:" + "\n" + errors + " \n " + " \n ";
 
   }, firstLine);
 
